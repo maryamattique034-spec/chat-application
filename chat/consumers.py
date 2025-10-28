@@ -31,7 +31,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         #save msg to db
         await sync_to_async(Message.objects.create)(
             room_name = self.room_name,
-            user = 'Anonymous',
+            user = self.scope['user'].username if self.scope['user'].is_authenticated else "Anonymous",
             message = message
         )
 
