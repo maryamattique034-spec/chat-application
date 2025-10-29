@@ -28,27 +28,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         message = data['message']
 
+        if self.scope['user'].is_authenticated:
+            username = self.scope['user'].username
+        else:
+            await self.close()
+            return
         #save msg to db
-        await sync_to_async(Message.objects.create)(
+        msg_obj=await sync_to_async(Message.objects.create)(
             room_name = self.room_name,
-            user = 'Anonymous',
+            user = username,
             message = message
         )
 
 
+       # send msg to websocket group with timestamp
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message':message
+                'message':msg_obj.message,
+                'username': username,
+                'timestamp': msg_obj.timestamp.strftime('%H:%M:%S'),
             }
         )
 
 
     async def chat_message(self, event):
-        message = event['message']
-
 
         await self.send(text_data=json.dumps({
-            'message': message
+            'message': event['message'],
+            'username': event['username'],
+            'timestamp': event['timestamp'],
         }))

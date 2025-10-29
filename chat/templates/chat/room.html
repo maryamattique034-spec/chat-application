@@ -9,12 +9,13 @@
 
     <textarea id="chat-log" cols="80" rows="20" readonly>
     {% for msg in messages %}
-    {{msg.user}}:{{msg.message}}
+    {{msg.timestamp}} | {{msg.user}}:{{msg.message}}
     {% endfor %}
     </textarea><br>
 
     <input id = "chat-message-input" type="text" size="80" placeholder="Type message...">
     <input id= "chat-message-submit" type="button" value="send">
+    <a href = "{% url 'logout' %}">Logout</a>
 
     <script>
 
@@ -27,7 +28,8 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message.trim() + '\n');
+            const chatLog = document.querySelector('#chat-log');
+            chatLog.value += `${data.timestamp} | ${data.username}: ${data.message}\n`;
 
         };
 
