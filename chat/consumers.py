@@ -28,10 +28,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         data = json.loads(text_data)
         message = data['message']
 
+        if self.scope['user'].is_authenticated:
+            username = self.scope['user'].username
+        else:
+            await self.close()
+            return
         #save msg to db
         await sync_to_async(Message.objects.create)(
             room_name = self.room_name,
-            user = self.scope['user'].username if self.scope['user'].is_authenticated else "Anonymous",
+            user = username,
             message = message
         )
 
