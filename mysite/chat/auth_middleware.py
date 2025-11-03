@@ -43,6 +43,7 @@ class TokenAuthMiddleware:
                 print(f"!!! Debug (Auth): User Authenticated? {user_obj.is_authenticated}(user_obj.username if user_obj.is_authenticated else 'None')!!!")
             else:
                 scope['user'] = AnonymousUser()
+                print("No token provided or invalid token")
         except Exception as e:
             print(f"Auth middleware error: {e}")
             scope['user'] = AnonymousUser()

@@ -14,7 +14,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return Message.objects.create(room = room, user = user, content = message)
 
     async def connect(self):
-        print(f"!!! CONSUMER DEBUG: User is authenticated: {self.scope['user'].is_authenticated} !!!")
+
+        print(f"DEBUG: User is authenticated: {self.scope['user'].is_authenticated}")
         if self.scope['user'].is_authenticated:
             self.room_name = self.scope['url_route']['kwargs']['room_name']
             self.room_group_name = f'chat_{self.room_name}'
@@ -24,11 +25,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.room_group_name, self.channel_name
             )
             await self.accept()
-            print(f"--- SUCCESS: User {self.scope['user'].username} accepted. ---")
+            print(f"SUCCESS: User {self.scope['user'].username} connected. ---")
 
         else:
-            print("--- FAILURE: Anonymous user rejected. ---")
+            print("FAILURE: Anonymous user rejected.")
             await self.close(code=4001)
+
 
     async def disconnect(self, close_code):
         # Leave room group
@@ -36,7 +38,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_discard(
                 self.room_group_name, self.channel_name
             )
-
 
 
     async def receive(self, text_data):
@@ -73,28 +74,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return datetime.now().strftime("%H:%M:%S")
 
 
-# # chat/consumers.py (TEMPORARY CODE FOR DEBUGGING)
-# import json
-# from channels.generic.websocket import AsyncWebsocketConsumer
-#
-#
-# class ChatConsumer(AsyncWebsocketConsumer):
-#     async def connect(self):
-#         # 1. New Debug Print (Must appear if middleware is running)
-#         print(f"!!! CONSUMER DEBUG: User is authenticated: {self.scope['user'].is_authenticated} !!!")
-#
-#         # 2. Check Authentication ONLY (No room name logic)
-#         if self.scope['user'].is_authenticated:
-#             await self.accept()
-#             print(f"--- SUCCESS: User {self.scope['user'].username} accepted. ---")
-#         else:
-#             print("--- FAILURE: Anonymous user rejected. ---")
-#             await self.close(code=4001)
-#
-#     async def disconnect(self, close_code):
-#         pass
-#
-#     async def receive(self, text_data):
-#         if self.scope['user'].is_authenticated:
-#             await self.send(
-#                 text_data=json.dumps({'message': 'Authenticated Echo: ' + json.loads(text_data)['message']}))
