@@ -11,7 +11,7 @@
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
-         const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMTc0NjMzLCJpYXQiOjE3NjIxNzEwMzMsImp0aSI6IjRjZDY1NzVhOWVmNTRiMWY5NDZkM2Y2ZTJmOWQ2NTc5IiwidXNlcl9pZCI6IjEifQ.lbaSv34s_-Pj6SdRlk9yD_kpORK7rcGPuiyEwSuJAqA";
+         const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMTgwMTgyLCJpYXQiOjE3NjIxNzY1ODIsImp0aSI6IjcxMTY5MWQyNjM1NzRiNmE4YzljZjcwZmI2NGRlY2I0IiwidXNlcl9pZCI6IjEifQ.IRI4ps0TY_ZSoYD6J0rKTQHfx4NTxi7u7_riqRs5jOA";
 
          if (!ACCESS_TOKEN){
              console.error("Access Token is missing. Authentication failed.");
