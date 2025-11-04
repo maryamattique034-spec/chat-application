@@ -1,10 +1,10 @@
 from channels.auth import AuthMiddlewareStack
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
-from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import get_user_model
-import urllib.parse
 from django.db import close_old_connections
+from rest_framework_simplejwt.tokens import AccessToken
+
 
 @database_sync_to_async
 def get_user_from_token(token_key):
@@ -13,6 +13,7 @@ def get_user_from_token(token_key):
     try:
         access_token = AccessToken(token_key)
         user_id = access_token.payload.get('user_id')
+        print(f"User ID: : {user_id}")
 
         if user_id:
             user_id = int(user_id)
@@ -24,32 +25,22 @@ def get_user_from_token(token_key):
         return AnonymousUser()
 
 
+# We don't check token in middleware now, just mark as Anonymous initially
 class TokenAuthMiddleware:
     """
-    Custom middleware to authenticate user using a 'token' query parameter in the URL.
+    Middleware to attach a user object.
+    Full token validation will be done inside consumer upon first message.
     """
     def __init__(self, inner):
         self.inner = inner
 
     async def __call__(self, scope, receive, send):
-        try:
-            query_string = scope.get('query_string', b'').decode()
-            query_params = urllib.parse.parse_qs(query_string)
-            token = query_params.get('token', [None])[0]
-
-            if token:
-                user_obj = await get_user_from_token(token)
-                scope['user'] = user_obj
-                print(f"!!! Debug (Auth): User Authenticated? {user_obj.is_authenticated}(user_obj.username if user_obj.is_authenticated else 'None')!!!")
-            else:
-                scope['user'] = AnonymousUser()
-                print("No token provided or invalid token")
-        except Exception as e:
-            print(f"Auth middleware error: {e}")
-            scope['user'] = AnonymousUser()
-
+        # Close old DB connections to be safe in async context
+        close_old_connections()
+        # Initially mark all users as Anonymous
+        scope['user'] = AnonymousUser()
         return await self.inner(scope, receive, send)
 
-# Combine with AuthMiddlewareStack
+# Wrap with AuthMiddlewareStack to still allow session/auth integration
 def TokenAuthMiddlewareStack(inner):
     return AuthMiddlewareStack(TokenAuthMiddleware(inner))

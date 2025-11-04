@@ -11,7 +11,7 @@
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
-         const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMTg1NTIzLCJpYXQiOjE3NjIxODE5MjMsImp0aSI6IjZkNDQ5ZDM0OWFlNjQ4NGNiYWY3NjZmM2UwOGNlOWI3IiwidXNlcl9pZCI6IjEifQ.KYwP5FSs4ldURq2LT6I46l8ZnL6r__rL6nORRDJ3AWU";
+        const ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYyMjQ3NDMxLCJpYXQiOjE3NjIyNDM4MzEsImp0aSI6IjQ1MmNjYzhlMjJjOTRmZGE4MmExOGZhZDNiNjNiNjI0IiwidXNlcl9pZCI6IjEifQ._eRgplfAGmdXk01hlDpFvna5ykqfHl795WjCfkaxmmQ";
 
          if (!ACCESS_TOKEN){
              console.error("Access Token is missing. Authentication failed.");
@@ -24,11 +24,18 @@
             + window.location.host
             + '/ws/chat/'
             + roomName
-            + '/?token=' + ACCESS_TOKEN
+            + '/'
         );
 
          chatSocket.onopen = function(e) {
             console.log('Chat socket connected successfully!');
+
+            //send first message with token for authentication
+            chatSocket.send(JSON.stringify({
+                "token": ACCESS_TOKEN
+            }));
+
+
 
            // Fetch Chat History
             fetch('/chat/api/messages/history/?room_name=' + roomName, {
@@ -59,6 +66,18 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
+
+            //if it's the first auth response
+            if(data.success) {
+                console.log(data.success);
+                return;
+            }
+            if (data.error) {
+                alert(data.error);
+                chatSocket.close();
+                return;
+            }
+
             const date = new Date(data.timestamp);
             const formattedTime = date.toLocaleString('en-PK', {
                 hour: '2-digit',
