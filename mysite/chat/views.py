@@ -4,6 +4,7 @@ from django.shortcuts import render
 from pyexpat.errors import messages
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import status
@@ -41,6 +42,7 @@ class LogoutView(APIView):
 
 
 class MessageViewSet(viewsets.GenericViewSet):
+    authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=['get'])
@@ -49,6 +51,10 @@ class MessageViewSet(viewsets.GenericViewSet):
         if not room_name:
             return Response({"detail": "room_name query parameter is required"},status = status.HTTP_400_BAD_REQUEST)
         room = get_object_or_404(Room, name = room_name)
+
+        #check permission
+        if not room.is_user_allowed(request.user):
+            return Response({"error": "You are not allowed to view this room."}, status = status.HTTP_403_FORBIDDEN)
 
         messages = Message.objects.filter(room=room).order_by('timestamp')
         serializer = MessageSerializer(messages, many=True)
@@ -61,6 +67,9 @@ class MessageViewSet(viewsets.GenericViewSet):
             return Response({"detail": "room_name query parameter is required"},status = status.HTTP_400_BAD_REQUEST)
 
         room = get_object_or_404(Room, name =room_name)
+
+        if not room.is_user_allowed(request.user):
+            return Response({"error": "You are not allowed to send messages in this room."}, status = status.HTTP_403_FORBIDDEN)
 
         serializer = MessageSerializer(data=request.data)
         if serializer.is_valid():
@@ -81,3 +90,4 @@ class MessageViewSet(viewsets.GenericViewSet):
             )
             return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
