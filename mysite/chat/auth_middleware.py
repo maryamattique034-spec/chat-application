@@ -4,6 +4,8 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections
 from rest_framework_simplejwt.tokens import AccessToken
+import logging
+logger = logging.getLogger(__name__)
 
 
 @database_sync_to_async
@@ -13,7 +15,7 @@ def get_user_from_token(token_key):
     try:
         access_token = AccessToken(token_key)
         user_id = access_token.payload.get('user_id')
-        print(f"User ID: : {user_id}")
+        logger.info(f"User ID: {user_id}")
 
         if user_id:
             user_id = int(user_id)
@@ -21,7 +23,7 @@ def get_user_from_token(token_key):
         return User.objects.get(id=user_id)
     except Exception as e:
         # InvalidToken or User.DoesNotExist
-        print(f"Token authentication failed: {e}")
+        logger.error(f"Token authentication failed: {e}")
         return AnonymousUser()
 
 

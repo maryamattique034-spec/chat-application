@@ -7,3 +7,6 @@ env/
 
 #Environment variables
 .env
+
+#log files
+*.log
